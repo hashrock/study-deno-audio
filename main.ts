@@ -8,7 +8,7 @@ import {
   SampleFormat,
   StreamFlags,
   type StreamParameters,
-} from "https://deno.land/x/portaudio/mod.ts";
+} from "https://deno.land/x/portaudio@0.2.0/mod.ts";
 
 const NUM_SECONDS = 5;
 const SAMPLE_RATE = 44100;
