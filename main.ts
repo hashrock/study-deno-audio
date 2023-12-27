@@ -1,8 +1,3 @@
-/**
- * A basic example of playing a sine wave. This is directly ported from portaudio's paex_write_sine.c so the code is definitely more dubious then it has to be.
- *
- * @module
- */
 import {
   PortAudio,
   SampleFormat,
@@ -63,21 +58,38 @@ function envelope(t: number, dur: number) {
     return 0;
   }
 }
+function ar(attack: number, release: number) {
+  return (t: number, dur: number) => {
+    if (t < attack) {
+      return t / attack;
+    } else if (t < dur) {
+      return 1 - (t - attack) / release;
+    } else {
+      return 0;
+    }
+  };
+}
+
+const kick = {
+  pitch: ar(0, 200),
+  amp: ar(0, 200),
+};
 
 function tune(msec: number) {
   const notes = [
-    { freq: 440, start: 0, dur: 1 },
-    { freq: 880, start: 1, dur: 1 },
-    { freq: 440, start: 2, dur: 1 },
-    { freq: 880, start: 3, dur: 1 },
+    { freq: 800, start: 0, dur: 0.25 },
+    { freq: 800, start: 0.25, dur: 0.25 },
+    { freq: 800, start: 0.5, dur: 0.25 },
+    { freq: 800, start: 0.75, dur: 0.25 },
   ];
 
   for (let i = 0; i < notes.length; i++) {
     const note = notes[i];
     if (msec >= note.start * 1000 && msec < (note.start + note.dur) * 1000) {
       const t = msec - note.start * 1000;
-      const amp = envelope(t, note.dur * 1000);
-      return osc(msec, note.freq, amp);
+      const amp = kick.amp(t, note.dur * 1000);
+      const pitch = kick.pitch(t, note.dur * 1000);
+      return osc(msec, note.freq + pitch, amp);
     }
   }
   return 0;
