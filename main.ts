@@ -43,11 +43,11 @@ function osc(t: number, freq: number, amp = 1) {
   return Math.sin(t * freq * 2 * Math.PI) * amp;
 }
 
-let t = 0;
+let frame = 0;
 
 function envelope(t: number, dur: number) {
   const attack = 0;
-  const decay = 0.1;
+  const decay = 1000;
   const sustain = 0;
   const release = 0;
 
@@ -74,7 +74,6 @@ function tune(msec: number) {
 
   for (let i = 0; i < notes.length; i++) {
     const note = notes[i];
-    console.log(note);
     if (msec >= note.start * 1000 && msec < (note.start + note.dur) * 1000) {
       const t = msec - note.start * 1000;
       const amp = envelope(t, note.dur * 1000);
@@ -86,9 +85,9 @@ function tune(msec: number) {
 
 while (true) {
   for (let i = 0; i < FRAMES_PER_BUFFER; i++) {
-    const msec = t / SAMPLE_RATE;
+    const msec = frame / SAMPLE_RATE * 1000;
     buffer[i * 2] = tune(msec);
-    t++;
+    frame++;
   }
   PortAudio.writeStream(stream, buffer, FRAMES_PER_BUFFER * 2);
 }
