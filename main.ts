@@ -39,17 +39,16 @@ const stream = PortAudio.openStream(
 
 PortAudio.startStream(stream);
 
-function osc(t: number, freq: number) {
-  return Math.sin(t * freq * 2 * Math.PI);
+function osc(t: number, freq: number, amp = 1) {
+  return Math.sin(t * freq * 2 * Math.PI) * amp;
 }
 
 let t = 0;
 
 while (true) {
-  let amp = 1;
   for (let i = 0; i < FRAMES_PER_BUFFER; i++) {
     const msec = t / SAMPLE_RATE;
-    buffer[i * 2] = osc(msec, 880) * amp;
+    buffer[i * 2] = osc(msec, 880, 1);
     t++;
   }
   PortAudio.writeStream(stream, buffer, FRAMES_PER_BUFFER * 2);
