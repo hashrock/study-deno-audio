@@ -4,6 +4,7 @@ import {
   StreamFlags,
   type StreamParameters,
 } from "https://deno.land/x/portaudio@0.2.0/mod.ts";
+import { writeGraph } from "./image.ts";
 
 const SAMPLE_RATE = 44100;
 const FRAMES_PER_BUFFER = 1024;
@@ -72,15 +73,18 @@ function ar(attack: number, release: number) {
 
 const kick = {
   pitch: ar(0, 200),
-  amp: ar(0, 200),
+  amp: ar(0, 220),
 };
 
+const check: number[] = [];
+
 function tune(msec: number) {
+  const kickPitch = 100;
   const notes = [
-    { freq: 800, start: 0, dur: 0.25 },
-    { freq: 800, start: 0.25, dur: 0.25 },
-    { freq: 800, start: 0.5, dur: 0.25 },
-    { freq: 800, start: 0.75, dur: 0.25 },
+    { freq: kickPitch, start: 0, dur: 0.25 },
+    { freq: kickPitch, start: 0.25, dur: 0.25 },
+    { freq: kickPitch, start: 0.5, dur: 0.25 },
+    { freq: kickPitch, start: 0.75, dur: 0.25 },
   ];
 
   for (let i = 0; i < notes.length; i++) {
@@ -88,8 +92,8 @@ function tune(msec: number) {
     if (msec >= note.start * 1000 && msec < (note.start + note.dur) * 1000) {
       const t = msec - note.start * 1000;
       const amp = kick.amp(t, note.dur * 1000);
-      const pitch = kick.pitch(t, note.dur * 1000);
-      return osc(msec, note.freq + pitch, amp);
+      const pitch = kick.pitch(t, note.dur * 1000) * 200;
+      return osc(t / 1000, pitch > 50 ? pitch : 50, amp > 0 ? amp : 0);
     }
   }
   return 0;
@@ -101,5 +105,6 @@ while (true) {
     buffer[i * 2] = tune(msec);
     frame++;
   }
+  // writeGraph(check);
   PortAudio.writeStream(stream, buffer, FRAMES_PER_BUFFER * 2);
 }
