@@ -53,30 +53,101 @@ function ar(attack: number, release: number) {
   };
 }
 
-const kick = {
+interface Instrument {
+  pitch: (t: number, dur: number) => number;
+  amp: (t: number, dur: number) => number;
+}
+
+interface Note {
+  freq: number;
+  start: number;
+  dur: number;
+  vel?: number;
+}
+
+const kick: Instrument = {
   pitch: ar(0, 200),
   amp: ar(0, 220),
 };
 
+const hihat: Instrument = {
+  pitch: () => {
+    return 1;
+  },
+  amp: ar(0, 20),
+};
+
 const check: number[] = [];
+
+function noise(amp: number) {
+  return (Math.random() * 2 - 1) * amp;
+}
+
+function clamp(x: number, min: number, max: number) {
+  return Math.min(Math.max(x, min), max);
+}
 
 function tune(msec: number) {
   const kickPitch = 100;
-  const notes = [
+  const notes: Note[] = [
     { freq: kickPitch, start: 0, dur: 0.25 },
     { freq: kickPitch, start: 0.25, dur: 0.25 },
     { freq: kickPitch, start: 0.5, dur: 0.25 },
     { freq: kickPitch, start: 0.75, dur: 0.25 },
   ];
 
-  for (let i = 0; i < notes.length; i++) {
-    const note = notes[i];
-    if (msec >= note.start * 1000 && msec < (note.start + note.dur) * 1000) {
-      const t = msec - note.start * 1000;
-      const amp = kick.amp(t, note.dur * 1000);
-      const pitch = kick.pitch(t, note.dur * 1000) * 200;
-      return osc(t / 1000, pitch > 50 ? pitch : 50, amp > 0 ? amp : 0);
+  const hihatNotes: Note[] = [
+    { freq: 1000, start: 0 / 16, dur: 1 / 16 },
+    { freq: 1000, start: 1 / 16, dur: 1 / 16, vel: 0.5 },
+    { freq: 1000, start: 2 / 16, dur: 1 / 16, vel: 0.5 },
+    { freq: 1000, start: 3 / 16, dur: 1 / 16, vel: 0.5 },
+    { freq: 1000, start: 4 / 16, dur: 1 / 16 },
+    { freq: 1000, start: 5 / 16, dur: 1 / 16, vel: 0.5 },
+    { freq: 1000, start: 6 / 16, dur: 1 / 16, vel: 0.5 },
+    { freq: 1000, start: 7 / 16, dur: 1 / 16, vel: 0.5 },
+    { freq: 1000, start: 8 / 16, dur: 1 / 16 },
+    { freq: 1000, start: 9 / 16, dur: 1 / 16, vel: 0.5 },
+    { freq: 1000, start: 10 / 16, dur: 1 / 16, vel: 0.5 },
+    { freq: 1000, start: 11 / 16, dur: 1 / 16, vel: 0.5 },
+    { freq: 1000, start: 12 / 16, dur: 1 / 16 },
+    { freq: 1000, start: 13 / 16, dur: 1 / 16, vel: 0.5 },
+    { freq: 1000, start: 14 / 16, dur: 1 / 16, vel: 0.5 },
+    { freq: 1000, start: 15 / 16, dur: 1 / 16, vel: 0.5 },
+  ];
+
+  function match(notes: Note[], msec: number): Note | null {
+    for (let i = 0; i < notes.length; i++) {
+      const note = notes[i];
+      if (msec >= note.start * 1000 && msec < (note.start + note.dur) * 1000) {
+        return note;
+      }
     }
+    return null;
+  }
+
+  for (let i = 0; i < notes.length; i++) {
+    const matchedNote = match(notes, msec);
+    let ch1 = 0;
+    let ch2 = 0;
+    if (matchedNote) {
+      const note = matchedNote;
+      const t = msec - note.start * 1000;
+      const amp = clamp(kick.amp(t, note.dur * 1000), 0, 1);
+      const pitch = clamp(kick.pitch(t, note.dur * 1000) * 200, 80, 1000);
+
+      ch1 = osc(t / 1000, pitch, amp);
+    }
+
+    const matchedHiHatNote = match(hihatNotes, msec);
+    if (matchedHiHatNote) {
+      const note = matchedHiHatNote;
+      const t = msec - note.start * 1000;
+      const amp = clamp(hihat.amp(t, note.dur * 1000), 0, 1);
+      ch2 = noise(amp) * 0.1 * (note.vel ?? 0.8);
+    }
+
+    const ch = ch1 + ch2;
+    return ch;
   }
   return 0;
 }
