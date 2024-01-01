@@ -112,8 +112,68 @@ function tune(msec: number) {
     { freq: 1000, start: 12 / 16, dur: 1 / 16 },
     { freq: 1000, start: 13 / 16, dur: 1 / 16, vel: 0.5 },
     { freq: 1000, start: 14 / 16, dur: 1 / 16, vel: 0.5 },
-    { freq: 1000, start: 15 / 16, dur: 1 / 16, vel: 0.5 },
+    { freq: 1000, start: 15 / 16, dur: 1 / 32, vel: 0.5 },
+    { freq: 1000, start: 15 / 16 + 1 / 32, dur: 1 / 32, vel: 0.5 },
   ];
+
+  const bassSeq = [
+    "C4",
+    "C4",
+    "C5",
+    "C5",
+    "",
+    "C5",
+    "G5",
+    "D#5",
+    "C4",
+    "C4",
+    "C5",
+    "C5",
+    "",
+    "C5",
+    "G5",
+    "G#5",
+  ];
+
+  const bassNotes: Note[] = [];
+
+  for (let i = 0; i < bassSeq.length; i++) {
+    const note = bassSeq[i];
+    if (note) {
+      bassNotes.push({
+        freq: toFreq(note),
+        start: i / 16,
+        dur: 1 / 16,
+      });
+    }
+  }
+
+  function noteToFreq(note: number) {
+    return 440 * Math.pow(2, (note - 69) / 12);
+  }
+
+  function toFreq(name: string) {
+    const noteNames = [
+      "C",
+      "C#",
+      "D",
+      "D#",
+      "E",
+      "F",
+      "F#",
+      "G",
+      "G#",
+      "A",
+      "A#",
+      "B",
+    ];
+    const note = name.match(/^([A-G])(#?)(\d)$/);
+    if (!note) throw new Error(`Invalid note name: ${name}`);
+    const [, noteName, sharp, octave] = note;
+    const noteNo = noteNames.indexOf(noteName);
+    if (noteNo < 0) throw new Error(`Invalid note name: ${name}`);
+    return noteToFreq(noteNo + 12 * parseInt(octave) + (sharp ? 1 : 0));
+  }
 
   function match(notes: Note[], msec: number): Note | null {
     for (let i = 0; i < notes.length; i++) {
@@ -129,6 +189,8 @@ function tune(msec: number) {
     const matchedNote = match(notes, msec);
     let ch1 = 0;
     let ch2 = 0;
+    let ch3 = 0;
+
     if (matchedNote) {
       const note = matchedNote;
       const t = msec - note.start * 1000;
@@ -146,7 +208,17 @@ function tune(msec: number) {
       ch2 = noise(amp) * 0.1 * (note.vel ?? 0.8);
     }
 
-    const ch = ch1 + ch2;
+    const matchedBassNote = match(bassNotes, msec);
+    if (matchedBassNote) {
+      const note = matchedBassNote;
+      const t = msec - note.start * 1000;
+      const amp = 1;
+      const pitch = note.freq;
+
+      ch3 = osc(t / 1000, pitch, amp);
+    }
+
+    const ch = ch1 + ch2 + ch3;
     return ch;
   }
   return 0;
