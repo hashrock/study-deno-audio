@@ -41,24 +41,6 @@ function osc(t: number, freq: number, amp = 1) {
 
 let frame = 0;
 
-function envelope(t: number, dur: number) {
-  const attack = 0;
-  const decay = 1000;
-  const sustain = 0;
-  const release = 0;
-
-  if (t < attack) {
-    return t / attack;
-  } else if (t < attack + decay) {
-    return 1 - ((t - attack) / decay) * (1 - sustain);
-  } else if (t < dur - release) {
-    return sustain;
-  } else if (t < dur) {
-    return sustain * (1 - (t - (dur - release)) / release);
-  } else {
-    return 0;
-  }
-}
 function ar(attack: number, release: number) {
   return (t: number, dur: number) => {
     if (t < attack) {
@@ -99,12 +81,17 @@ function tune(msec: number) {
   return 0;
 }
 
+const LENGTH = 2;
+
 while (true) {
   for (let i = 0; i < FRAMES_PER_BUFFER; i++) {
     const msec = frame / SAMPLE_RATE * 1000;
     buffer[i * 2] = tune(msec);
     frame++;
   }
-  // writeGraph(check);
+  check.push(...buffer);
   PortAudio.writeStream(stream, buffer, FRAMES_PER_BUFFER * 2);
+  if (frame > LENGTH * SAMPLE_RATE) break;
 }
+
+writeGraph(check);
