@@ -139,22 +139,22 @@ function tune(msec: number) {
   ], 4);
 
   const bassSeq = [
-    "C4",
-    "C4",
-    "C5",
-    "C5",
     "",
+    "C3",
     "C5",
-    "G5",
-    "D#5",
     "C4",
-    "C4",
-    "C5",
-    "C5",
     "",
+    "C4",
+    "G4",
+    "D#4",
+    "C3",
     "C5",
+    "C4",
+    "C6",
+    "",
+    "C4",
     "G5",
-    "G#5",
+    "G#4",
   ];
 
   const bassNotes: Note[] = [];
@@ -227,14 +227,14 @@ function tune(msec: number) {
       const note = matchedHiHatNote;
       const t = msec - note.start * 1000;
       const amp = clamp(hihat.amp(t, note.dur * 1000), 0, 1);
-      ch2 = noise(amp) * 0.1 * (note.vel ?? 0.8);
+      ch2 = noise(amp) * 0.2 * (note.vel ?? 0.8);
     }
 
     const matchedBassNote = match(repeat(bassNotes, 4), msec);
     if (matchedBassNote) {
       const note = matchedBassNote;
       const t = msec - note.start * 1000;
-      const amp = clamp(ar(0, 50)(t, note.dur * 1000), 0, 0.5);
+      const amp = clamp(ar(0, 50)(t, note.dur * 1000), 0, 0.4);
       const pitch = note.freq;
 
       ch3 = oscSaw(t / 1000, pitch, amp);
