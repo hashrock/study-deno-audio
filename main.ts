@@ -87,16 +87,33 @@ function clamp(x: number, min: number, max: number) {
   return Math.min(Math.max(x, min), max);
 }
 
+function shift(notes: Note[], amount: number) {
+  return notes.map((note) => {
+    return {
+      ...note,
+      start: note.start + amount,
+    };
+  });
+}
+
+function repeat(arr: Note[], n: number) {
+  const res: Note[] = [];
+  for (let i = 0; i < n; i++) {
+    res.push(...shift(arr, i));
+  }
+  return res;
+}
+
 function tune(msec: number) {
   const kickPitch = 100;
-  const notes: Note[] = [
+  const notes: Note[] = repeat([
     { freq: kickPitch, start: 0, dur: 0.25 },
     { freq: kickPitch, start: 0.25, dur: 0.25 },
     { freq: kickPitch, start: 0.5, dur: 0.25 },
     { freq: kickPitch, start: 0.75, dur: 0.25 },
-  ];
+  ], 4);
 
-  const hihatNotes: Note[] = [
+  const hihatNotes: Note[] = repeat([
     { freq: 1000, start: 0 / 16, dur: 1 / 16 },
     { freq: 1000, start: 1 / 16, dur: 1 / 16, vel: 0.5 },
     { freq: 1000, start: 2 / 16, dur: 1 / 16, vel: 0.5 },
@@ -114,7 +131,7 @@ function tune(msec: number) {
     { freq: 1000, start: 14 / 16, dur: 1 / 16, vel: 0.5 },
     { freq: 1000, start: 15 / 16, dur: 1 / 32, vel: 0.5 },
     { freq: 1000, start: 15 / 16 + 1 / 32, dur: 1 / 32, vel: 0.5 },
-  ];
+  ], 4);
 
   const bassSeq = [
     "C4",
@@ -208,7 +225,7 @@ function tune(msec: number) {
       ch2 = noise(amp) * 0.1 * (note.vel ?? 0.8);
     }
 
-    const matchedBassNote = match(bassNotes, msec);
+    const matchedBassNote = match(repeat(bassNotes, 4), msec);
     if (matchedBassNote) {
       const note = matchedBassNote;
       const t = msec - note.start * 1000;
@@ -224,7 +241,7 @@ function tune(msec: number) {
   return 0;
 }
 
-const LENGTH = 2;
+const LENGTH = 2 * 4;
 
 while (true) {
   for (let i = 0; i < FRAMES_PER_BUFFER; i++) {
