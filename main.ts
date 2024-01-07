@@ -39,6 +39,10 @@ function osc(t: number, freq: number, amp = 1) {
   return Math.sin(t * freq * 2 * Math.PI) * amp;
 }
 
+function oscSaw(t: number, freq: number, amp = 1) {
+  return ((t * freq * 2) % 2 - 1) * amp;
+}
+
 let frame = 0;
 
 function ar(attack: number, release: number) {
@@ -66,7 +70,7 @@ interface Note {
 }
 
 const kick: Instrument = {
-  pitch: ar(0, 200),
+  pitch: ar(0, 50),
   amp: ar(0, 220),
 };
 
@@ -105,12 +109,13 @@ function repeat(arr: Note[], n: number) {
 }
 
 function tune(msec: number) {
-  const kickPitch = 100;
+  const kickPitch = 400;
   const notes: Note[] = repeat([
-    { freq: kickPitch, start: 0, dur: 0.25 },
-    { freq: kickPitch, start: 0.25, dur: 0.25 },
-    { freq: kickPitch, start: 0.5, dur: 0.25 },
-    { freq: kickPitch, start: 0.75, dur: 0.25 },
+    { freq: kickPitch, start: 0, dur: 3 / 16 },
+    { freq: kickPitch, start: 3 / 16, dur: 1 / 16 },
+    { freq: kickPitch, start: 1 / 4, dur: 0.25 },
+    { freq: kickPitch, start: 2 / 4, dur: 0.25 },
+    { freq: kickPitch, start: 3 / 4, dur: 0.25 },
   ], 4);
 
   const hihatNotes: Note[] = repeat([
@@ -229,10 +234,10 @@ function tune(msec: number) {
     if (matchedBassNote) {
       const note = matchedBassNote;
       const t = msec - note.start * 1000;
-      const amp = 1;
+      const amp = clamp(ar(0, 50)(t, note.dur * 1000), 0, 0.5);
       const pitch = note.freq;
 
-      ch3 = osc(t / 1000, pitch, amp);
+      ch3 = oscSaw(t / 1000, pitch, amp);
     }
 
     const ch = ch1 + ch2 + ch3;
